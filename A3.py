@@ -10,6 +10,7 @@ import numpy as np
 import scipy.optimize as opt
 from sklearn import cluster
 import errors as err
+import cluster_tools as ct
 
 
 def read_clean(fn):
@@ -85,7 +86,7 @@ def plot_gdp(df_gdp):
     plt.legend(title='Countries', bbox_to_anchor=(
         1.01, 1), fontsize=12, title_fontsize=12)
     plt.title("GDP per capita")
-    # plt.savefig("GDP.png", dpi = 300, bbox_inches='tight')
+    plt.savefig("GDP.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -107,13 +108,13 @@ def curve_fit_and_plot(df, country):
     plt.figure()
     plt.title(f"{country} CO2 emissions (metric tons per capita)")
     plt.plot(x, y, label="data", c="green")
-    plt.plot(x, df["fit_value"], c="red", label="fit")
+    plt.plot(x, df["fit_value"], c="deeppink", label="fit")
     plt.fill_between(x, low, up, alpha=0.2)
     plt.legend()
     plt.xlim(1990, 2019)
     plt.xlabel("Year")
     plt.ylabel("CO2 Emission(mt/c)")
-    plt.savefig(f"{country}_curve_fit.png", dpi = 300, bbox_inches='tight')
+    plt.savefig(f"{country}_curve_fit.png", dpi=300, bbox_inches='tight')
     plt.show()
     # Return parameters and covariance matrix
     return param, cov
@@ -139,7 +140,7 @@ def predict_co2_emission(df_co2, country):
     plt.legend()
     plt.xlabel("Year")
     plt.ylabel("CO2")
-    plt.savefig(f"{country}_prediction.png", dpi = 300, bbox_inches='tight')
+    plt.savefig(f"{country}_prediction.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -163,42 +164,49 @@ def predict_renewable_energy(df_renew, country):
     plt.legend()
     plt.xlabel("Year")
     plt.ylabel("Renewable Energy(%)")
-    plt.savefig(f"{country}_renewable_energy.png", dpi = 300, bbox_inches='tight')
+    plt.savefig(f"{country}_renewable_energy.png",
+                dpi=300, bbox_inches='tight')
     plt.show()
 
 
-def clustering():
+def clustering(df_co2, df_renew):
     """
-    Generates a scatter plot.
+    Generates a scatter plot and saves it as a PNG file.
     """
-    # Normalize data
-    df_co2_norm = (df_co2 - df_co2.mean()) / df_co2.std()
-    df_renew_norm = (df_renew - df_renew.mean()) / df_renew.std()
-    
+    # Scale the data using the scaler function from ct
+    df_norm, df_min, df_max = ct.scaler(df_co2)
+
     # Create cluster and visualize CO2 emissions of given countries
-    kmean = cluster.KMeans(n_clusters=4).fit(df_co2)
+    kmean = cluster.KMeans(n_clusters=4).fit(df_norm)
     label = kmean.labels_
-    plt.scatter(df_co2_norm["China"],df_co2_norm["India"],c=label,cmap="jet")
-    plt.xlabel("India CO2 Emission",fontsize=12)
-    plt.ylabel("China CO2 Emission",fontsize=12)
-    plt.title("UK and India - CO2 Emission",fontsize=12)
+    plt.scatter(df_norm["China"], df_norm["India"], c=label, cmap="tab10")
+    plt.xlabel("India CO2 Emission", fontsize=12)
+    plt.ylabel("China CO2 Emission", fontsize=12)
+    plt.title("UK and India - CO2 Emission", fontsize=12)
     c = kmean.cluster_centers_
+
+    # Back scaling
+    c = ct.backscale(c, df_min, df_max)
+    x = c[:, 0]
+    y = c[:, 1]
+    plt.savefig("norm.png", dpi=300, bbox_inches='tight')
     plt.show()
+
     # Create new DataFrame for the given country and cluster and visualize CO2 emissions vs renewable energy usage
-    df_India_norm = pd.DataFrame()
-    df_India_norm["co2_emission"] = df_co2_norm['India']
-    df_India_norm["renew_energy"] = df_renew_norm['India']
-    kmean = cluster.KMeans(n_clusters=4).fit(df_India_norm)
+    df_India = pd.DataFrame()
+    df_India["co2_emission"] = df_co2['India']
+    df_India["renew_energy"] = df_renew['India']
+    kmean = cluster.KMeans(n_clusters=4).fit(df_India)
     label = kmean.labels_
-    plt.scatter(df_India_norm["co2_emission"], df_India_norm["renew_energy"], c=label, cmap="jet")
+    plt.scatter(df_India["co2_emission"], df_India["renew_energy"], c=label, cmap="tab10")
+    plt.title(f"CO2 Emission vs Renewable Energy Usage-India")
     plt.xlabel("CO2 Emission (mt/capita)",fontsize=12)
     plt.ylabel("Renewable Energy(%)",fontsize=12)
-    plt.title(f"CO2 Emission vs Renewable Energy Usage-India",fontsize=12)
     c = kmean.cluster_centers_
     for t in range(4):
-        xc, yc = c[t,:]
-        plt.plot(xc, yc, "xk",markersize=8)
-    plt.savefig("co2_ener.png", dpi = 300, bbox_inches='tight')
+        xc, yc = c[t, :]
+        plt.plot(xc, yc, "xk", markersize=8)
+    plt.savefig("co2_ener.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -212,10 +220,10 @@ if __name__ == '__main__':
 
     df_gdp = read_clean('gdpannum.csv')
     df_renew = read_clean('ren_energy.csv')
-    
+
     # calling gdp plot for visualization
     plot_gdp(df_gdp)
-    
+
     # Curve fit and plot for China and India
     param_china, cov_china = curve_fit_and_plot(df_co2, "China")
     param_india, cov_india = curve_fit_and_plot(df_co2, "India")
@@ -225,42 +233,6 @@ if __name__ == '__main__':
     predict_co2_emission(df_co2, 'India')
     predict_renewable_energy(df_renew, 'India')
     predict_renewable_energy(df_renew, 'China')
-    
+
     # calling for clustering
-    clustering()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    clustering(df_co2, df_renew)
