@@ -80,12 +80,11 @@ def plot_gdp(df_gdp):
     """
     plt.plot(df_gdp["year"], df_gdp["China"], label='China')
     plt.plot(df_gdp["year"], df_gdp['India'], label='India')
-    plt.xlim(1990, 2020)
-    plt.xlabel("Year")
-    plt.ylabel("GDP Per Capita")
-    plt.legend(title='Countries', bbox_to_anchor=(
-        1.01, 1), fontsize=12, title_fontsize=12)
-    plt.title("GDP per capita")
+    plt.xlim(1990, 2019)
+    plt.xlabel("Year", fontsize=15)
+    plt.ylabel("GDP Per Capita", fontsize=15)
+    plt.legend(fontsize=15)
+    plt.title("GDP per capita", fontsize=15)
     plt.savefig("GDP.png", dpi=300, bbox_inches='tight')
     plt.show()
 
@@ -106,14 +105,14 @@ def curve_fit_and_plot(df, country):
     df["fit_value"] = curve_fun(x, * param)
     # Plotting the figure
     plt.figure()
-    plt.title(f"{country} CO2 emissions (metric tons per capita)")
+    plt.title(f"{country} CO2 emissions (metric tons per capita)", fontsize=15)
     plt.plot(x, y, label="data", c="green")
     plt.plot(x, df["fit_value"], c="deeppink", label="fit")
     plt.fill_between(x, low, up, alpha=0.2)
-    plt.legend()
+    plt.legend(fontsize=15)
     plt.xlim(1990, 2019)
-    plt.xlabel("Year")
-    plt.ylabel("CO2 Emission(mt/c)")
+    plt.xlabel("Year", fontsize=15)
+    plt.ylabel("CO2 Emission(mt/c)", fontsize=15)
     plt.savefig(f"{country}_curve_fit.png", dpi=300, bbox_inches='tight')
     plt.show()
     # Return parameters and covariance matrix
@@ -125,21 +124,23 @@ def predict_co2_emission(df_co2, country):
     Generates a plot of predicted CO2 emissions for a given country.
     """
     # Fit the curve to the data and generate predicted values
-    param, cov = opt.curve_fit(curve_fun, df_co2["year"], df_co2[country], p0=[4e8, 0.1])
+    param, cov = opt.curve_fit(
+        curve_fun, df_co2["year"], df_co2[country], p0=[4e8, 0.1])
     sigma = np.sqrt(np.diag(cov))
     low, up = err.err_ranges(df_co2["year"], curve_fun, param, sigma)
     df_co2["fit_value"] = curve_fun(df_co2["year"], *param)
 
     # Plotting the predicted values
     plt.figure()
-    plt.title(f"{country} CO2 emission prediction")
+    plt.title(f"{country} CO2 emission prediction", fontsize=15)
     pred_year = np.arange(1990, 2030)
     pred_ind = curve_fun(pred_year, *param)
     plt.plot(df_co2["year"], df_co2[country], label="data", c="green")
-    plt.plot(pred_year, pred_ind, label="predicted values", c="red")
-    plt.legend()
-    plt.xlabel("Year")
-    plt.ylabel("CO2")
+    plt.plot(pred_year, pred_ind, label="predicted values",
+             c="red", linestyle="--")
+    plt.legend(fontsize=15)
+    plt.xlabel("Year", fontsize=15)
+    plt.ylabel("CO2", fontsize=15)
     plt.savefig(f"{country}_prediction.png", dpi=300, bbox_inches='tight')
     plt.show()
 
@@ -149,21 +150,23 @@ def predict_renewable_energy(df_renew, country):
     Generates a plot of predicted CO2 emissions for a given country.
     """
     # Fit the curve to the data and generate predicted values
-    param, cov = opt.curve_fit(curve_fun, df_renew["year"], df_renew[country], p0=[4e8, 0.1])
+    param, cov = opt.curve_fit(
+        curve_fun, df_renew["year"], df_renew[country], p0=[4e8, 0.1])
     sigma = np.sqrt(np.diag(cov))
     low, up = err.err_ranges(df_renew["year"], curve_fun, param, sigma)
     df_renew["fit_value"] = curve_fun(df_renew["year"], *param)
 
     # Plotting the predicted values
     plt.figure()
-    plt.title(f"{country} Renewable Energy prediction")
+    plt.title(f"{country} Renewable Energy prediction", fontsize=15)
     pred_year = np.arange(1990, 2030)
     pred_ind = curve_fun(pred_year, *param)
     plt.plot(df_renew["year"], df_renew[country], label="data", c="green")
-    plt.plot(pred_year, pred_ind, label="predicted values", c="red")
-    plt.legend()
-    plt.xlabel("Year")
-    plt.ylabel("Renewable Energy(%)")
+    plt.plot(pred_year, pred_ind, label="predicted values",
+             c="red", linestyle="--")
+    plt.legend(fontsize=15)
+    plt.xlabel("Year", fontsize=15)
+    plt.ylabel("Renewable Energy(%)", fontsize=15)
     plt.savefig(f"{country}_renewable_energy.png",
                 dpi=300, bbox_inches='tight')
     plt.show()
@@ -180,9 +183,9 @@ def clustering(df_co2, df_renew):
     kmean = cluster.KMeans(n_clusters=4).fit(df_norm)
     label = kmean.labels_
     plt.scatter(df_norm["China"], df_norm["India"], c=label, cmap="tab10")
-    plt.xlabel("India CO2 Emission", fontsize=12)
-    plt.ylabel("China CO2 Emission", fontsize=12)
-    plt.title("UK and India - CO2 Emission", fontsize=12)
+    plt.xlabel("India CO2 Emission", fontsize=15)
+    plt.ylabel("China CO2 Emission", fontsize=15)
+    plt.title("UK and India - CO2 Emission", fontsize=15)
     c = kmean.cluster_centers_
 
     # Back scaling
@@ -198,10 +201,11 @@ def clustering(df_co2, df_renew):
     df_India["renew_energy"] = df_renew['India']
     kmean = cluster.KMeans(n_clusters=4).fit(df_India)
     label = kmean.labels_
-    plt.scatter(df_India["co2_emission"], df_India["renew_energy"], c=label, cmap="tab10")
-    plt.title(f"CO2 Emission vs Renewable Energy Usage-India")
-    plt.xlabel("CO2 Emission (mt/capita)",fontsize=12)
-    plt.ylabel("Renewable Energy(%)",fontsize=12)
+    plt.scatter(df_India["co2_emission"],
+                df_India["renew_energy"], c=label, cmap="tab10")
+    plt.title(f"CO2 Emission vs Renewable Energy Usage-India", fontsize=15)
+    plt.xlabel("CO2 Emission (mt/capita)", fontsize=15)
+    plt.ylabel("Renewable Energy(%)", fontsize=15)
     c = kmean.cluster_centers_
     for t in range(4):
         xc, yc = c[t, :]
